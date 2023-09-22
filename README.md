@@ -1,6 +1,6 @@
 ![](https://raw.githubusercontent.com/yKesamaru/PnP_problem/master/assets/g860.png)
 
-コンピュータービジョンでは、PnP問題という単語が度々登場します。PnP問題とはなにか、を数学を用いずに、主に論文の引用を用いて紹介します。リンクをつけていますので、詳細を知りたい方はそちらをご覧ください。
+コンピュータービジョンでは、PnP問題という単語が度々登場します。PnP問題とはなにか、を数学を用いずに、主に論文の引用を用いて紹介します。すべての論文にリンクをつけていますので、詳細を知りたい方はそちらをご覧ください。
 
 ## はじめに
 LiDAR（Light Detection and Ranging）センサーなどをもちいて、現実世界の3D座標を得たとします。その後、その機器（ドローンなど）に固定搭載されているカメラの位置と方向を知ることができれば、グローバル座標系における自らの位置を知ることができます。
@@ -60,6 +60,8 @@ Estimation](https://www.researchgate.net/publication/328036802_A_Review_of_Solut
   - PDFダウンロード可
 - [Perspective-n-Point](https://en.wikipedia.org/wiki/Perspective-n-Point): Wikipedia (en)
 - [カメラの位置・姿勢推定１　問題分類](https://daily-tech.hatenablog.com/entry/2018/01/21/125158)
+- [カメラの全体的な位置と姿勢](https://daily-tech.hatenablog.com/entry/2018/01/21/185633)
+  - 図入りで非常に分かりやすいサイトです。
 
 ## さまざまな解法と実装
 > Related Work
@@ -81,6 +83,11 @@ DLT法（Direct Linear Transform法）、P3P法、EPnP法（Efficient Perspectiv
 - **tvec（Translation Vector）**: 平行移動ベクトル。カメラの世界座標系における位置（x, y, z）を表します。これも3x1のベクトルで表されます。
 
 これらのパラメーターは、3Dの点群とそれに対応する2Dの点群、そしてカメラの内部パラメーターを用いて、`cv2.solvePnP`などの関数で計算されます。
+
+#### 参考
+- [solvePnPRansac()](https://docs.opencv.org/4.x/d9/d0c/group__calib3d.html#ga50620f0e26e02caa2e9adc07b5fbf24e)
+- [solveP3P()](https://docs.opencv.org/4.x/d9/d0c/group__calib3d.html#ga50620f0e26e02caa2e9adc07b5fbf24e)
+  - OpenCVドキュメント
 
 ### 1. DLT法（Direct Linear Transform法）
 
@@ -131,8 +138,8 @@ print("Translation Vector:", tvec)
 ```
 
 ### 4. 深層学習系
-
-PnP-Net。[PnP-Net: A hybrid Perspective-n-Point Network](https://arxiv.org/pdf/2003.04626.pdf)の疑似コード。
+#### PnP-Net
+[PnP-Net: A hybrid Perspective-n-Point Network](https://arxiv.org/pdf/2003.04626.pdf)の疑似コード。
 
 ```python
 import torch
@@ -162,6 +169,15 @@ output = model(input_data)
 print(output)
 
 ```
+
+#### [Deep_blind_PnP](https://github.com/Liumouliu/Deep_blind_PnP/tree/master)
+このリポジトリには、[Learning 2D–3D Correspondences To Solve The Blind Perspective-n-Point Problem](https://arxiv.org/pdf/2003.06752.pdf)という論文に基づいた実装コードが公開されています。
+config.pyを参照して、コマンドライン引数を指定できます。
+> 論文のアブスト
+> Conventional absolute camera pose via a Perspective-n-Point (PnP) solver often assumes that the correspondences between 2D image pixels and 3D points are given. When the correspondences between 2D and 3D points are not known a priori, the task becomes the much more challenging blind PnP problem. This paper proposes a deep CNN model which simultaneously solves for both the 6-DoF absolute camera pose and 2D–3D correspondences. Our model comprises three neural modules connected in sequence. First, a two-stream PointNet-inspired network is applied directly to both the 2D image keypoints and the 3D scene points in order to extract discriminative point-wise features harnessing both local and contextual information. Second, a global feature matching module is employed to estimate a matchability matrix among all 2D–3D pairs. Third, the obtained matchability matrix is fed into a classification module to disambiguate inlier matches. The entire network is trained end-to-end, followed by a robust model fitting (P3P-RANSAC) at test time only to recover the 6-DoF camera pose. Extensive tests on both real and simulated data have shown that our method substantially outperforms existing approaches, and is capable of processing thousands of points a second with the state-of-the-art accuracy.
+>
+> 訳：
+> 従来の絶対カメラ姿勢（カメラの全体的な位置と姿勢）は、Perspective-n-Point（PnP）ソルバーを通じて、2D画像ピクセルと3D点との対応関係が与えられているとしばしば仮定されます。2Dと3D点との対応関係が事前に知られていない場合、このタスクははるかに挑戦的なブラインドPnP問題となります。本論文では、6-DoFの絶対カメラ姿勢と2D-3D対応関係の両方を同時に解く深層CNNモデルを提案します。我々のモデルは、3つのニューラルモジュールが順番に接続されています。まず、PointNetに触発された二つのストリームのネットワークが、2D画像のキーポイントと3Dシーンの点に直接適用され、局所的および文脈的な情報を活用して識別的な点ごとの特徴を抽出します。次に、全体的な特徴マッチングモジュールが、すべての2D-3Dペア間のマッチング可能性行列を推定するために使用されます。最後に、得られたマッチング可能性行列は、インライアマッチを明確化するための分類モジュールに供給されます。ネットワーク全体はエンドツーエンドで訓練され、テスト時にのみ堅牢なモデルフィッティング（P3P-RANSAC）が行われて、6-DoFカメラ姿勢を回復します。実際のデータとシミュレーションデータの両方での広範なテストにより、我々の方法は既存のアプローチを大幅に上回り、最先端の精度で秒間数千点を処理できることが示されています。
 
 ## まとめ
 PnP問題とはなにか、を主に論文の引用を用いて紹介しました。
